@@ -1,0 +1,66 @@
+import pandas as pd
+
+# Load the CSV file
+posts_df = pd.read_csv('bcdisability_posts.csv')
+
+import re
+
+def clean_text(text):
+    text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces with a single space
+    text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
+    return text
+
+# Apply text cleaning to the title and body columns
+posts_df['cleaned_title'] = posts_df['title'].apply(clean_text)
+posts_df['cleaned_body'] = posts_df['body'].apply(clean_text)
+
+# convert all text to lowercase
+
+posts_df['cleaned_title'] = posts_df['cleaned_title'].str.lower()
+posts_df['cleaned_body'] = posts_df['cleaned_body'].str.lower()
+
+# get rid of stop words
+
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+nltk.download('stopwords')
+nltk.download('punkt')
+
+stop_words = set(stopwords.words('english'))
+
+def remove_stop_words(text):
+    tokens = word_tokenize(text)
+    filtered_tokens = [word for word in tokens if word not in stop_words]
+    return ' '.join(filtered_tokens)
+
+posts_df['cleaned_title'] = posts_df['cleaned_title'].apply(remove_stop_words)
+posts_df['cleaned_body'] = posts_df['cleaned_body'].apply(remove_stop_words)
+
+
+# lemmitization (reduce words to their base word, ex. running turns into run)
+
+from nltk.stem import WordNetLemmatizer
+
+nltk.download('wordnet')
+lemmatizer = WordNetLemmatizer()
+
+def lemmatize_text(text):
+    tokens = word_tokenize(text)
+    lemmatized_tokens = [lemmatizer.lemmatize(word) for word in tokens]
+    return ' '.join(lemmatized_tokens)
+
+posts_df['cleaned_title'] = posts_df['cleaned_title'].apply(lemmatize_text)
+posts_df['cleaned_body'] = posts_df['cleaned_body'].apply(lemmatize_text)
+
+#convert text into features
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Initialize the TF-IDF Vectorizer
+vectorizer = TfidfVectorizer()
+
+# Transform the cleaned text data
+title_tfidf = vectorizer.fit_transform(posts_df['cleaned_title'])
+body_tfidf = vectorizer.fit_transform(posts_df['cleaned_body'])
+
