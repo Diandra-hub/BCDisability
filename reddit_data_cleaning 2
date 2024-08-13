@@ -1,0 +1,47 @@
+import pandas as pd
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+# Load the CSV file
+posts_df = pd.read_csv('bcdisability_posts.csv')
+
+# Define the text cleaning function
+def clean_text(text):
+    if isinstance(text, str):  # Check if the input is a string
+        text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces with a single space
+        text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
+    else:
+        text = ''  # Handle non-string inputs (e.g., NaN) by returning an empty string
+    return text
+
+# Apply text cleaning to the title and body columns
+posts_df['cleaned_title'] = posts_df['title'].apply(clean_text)
+posts_df['cleaned_body'] = posts_df['body'].apply(clean_text)
+
+# Convert all text to lowercase
+posts_df['cleaned_title'] = posts_df['cleaned_title'].str.lower()
+posts_df['cleaned_body'] = posts_df['cleaned_body'].str.lower()
+
+# Download stopwords and tokenize words
+nltk.download('stopwords')
+nltk.download('punkt')
+
+stop_words = set(stopwords.words('english'))
+
+# Define function to remove stopwords
+def remove_stop_words(text):
+    tokens = word_tokenize(text)
+    filtered_tokens = [word for word in tokens if word not in stop_words]
+    return ' '.join(filtered_tokens)
+
+# Apply stopword removal to the cleaned text
+posts_df['cleaned_title'] = posts_df['cleaned_title'].apply(remove_stop_words)
+posts_df['cleaned_body'] = posts_df['cleaned_body'].apply(remove_stop_words)
+
+
+# # Assuming 'cleaned_body' has basic cleaning but stopwords might still be present
+
+# Save the cleaned data to a new CSV file
+posts_df.to_csv('cleaned_bcdisability_posts.csv', index=False)
