@@ -20,7 +20,7 @@ subreddit = reddit.subreddit('disability')
 
 posts = []
 post_limit = 100000  # Set your desired post limit here
-batch_size = 100  # How many posts to fetch in one request
+batch_size = 1000  # How many posts to fetch in one request
 post_counter = 0
 
 for submission in subreddit.new(limit=None):  # This will fetch posts until the end of the subreddit history
