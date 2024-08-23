@@ -1,0 +1,43 @@
+import praw
+import pandas as pd
+import time
+
+# Reddit API details
+
+client_id = 'dYSoaMBxeRsUqidUeIo53Q'
+client_secret = 'aNYoOSslntv_rycZDrorHXjwcTBjlQ'
+user_agent = 'B.C.Disability'
+
+# Connect to Reddit
+
+reddit = praw.Reddit(client_id=client_id, client_secret=client_secret, user_agent=user_agent)
+
+# subreddit selection
+
+subreddit = reddit.subreddit('disability')
+
+# Extract posts
+
+posts = []
+post_limit = 100000  # Set your desired post limit here
+batch_size = 100  # How many posts to fetch in one request
+post_counter = 0
+
+for submission in subreddit.new(limit=None):  # This will fetch posts until the end of the subreddit history
+    posts.append([submission.title, submission.selftext, submission.score, submission.id, submission.subreddit, submission.url, submission.num_comments, submission.created_utc])
+    post_counter += 1
+
+    if post_counter % batch_size == 0:
+        print(f"Fetched {post_counter} posts...")
+        time.sleep(1)  # Sleep to avoid hitting API rate limits
+
+    if post_counter >= post_limit:
+        break
+
+# Create a DataFrame
+posts_df = pd.DataFrame(posts, columns=['title', 'body', 'score', 'id', 'subreddit', 'url', 'num_comments', 'created'])
+
+# Save to a CSV file
+posts_df.to_csv('bcdisability_posts.csv', index=False)
+
+print(f"Saved {len(posts)} posts to 'bcdisability_posts.csv'")
